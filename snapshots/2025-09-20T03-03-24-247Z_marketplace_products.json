@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "68c67cd953abd57da3e63887",
+      "name": "laptop",
+      "description": "Producto disponible para canje con puntos Smart",
+      "category": "digital",
+      "pointsCost": 100,
+      "stock": 0,
+      "imageUrl": "https://pngtree.com/freepng/asus-elegant-gaming-laptop_17033096.html",
+      "provider": "Metro Store",
+      "isActive": true,
+      "validityMinutes": 60,
+      "createdAt": "2025-09-14T08:29:13.664Z",
+      "updatedAt": "2025-09-14T08:29:49.592Z",
+      "__v": 0
+    },
+    {
+      "_id": "68c678c53edb61c443a05527",
+      "name": "Descuento 20% KFC",
+      "description": "Cupón de descuento del 20% en cualquier combo de KFC",
+      "category": "digital",
+      "pointsCost": 50,
+      "stock": 100,
+      "imageUrl": "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?w=400",
+      "provider": "KFC Perú",
+      "isActive": true,
+      "validityMinutes": 60,
+      "createdAt": "2025-09-14T08:11:49.539Z",
+      "updatedAt": "2025-09-14T08:11:49.539Z",
+      "__v": 0
+    },
+    {
+      "_id": "68c67343f271d26a321ffe37",
+      "name": "Tarjeta Metro Recargable",
+      "description": "Tarjeta oficial del Metro de Lima con S/10 de saldo",
+      "category": "physical",
+      "pointsCost": 100,
+      "stock": 47,
+      "imageUrl": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400",
+      "provider": "Metro de Lima",
+      "isActive": true,
+      "validityMinutes": 60,
+      "createdAt": "2025-09-14T07:48:19.310Z",
+      "updatedAt": "2025-09-14T08:25:30.771Z",
+      "__v": 0
+    }
+  ],
+  "error": null,
+  "meta": {
+    "timestamp": "2025-09-20T03:03:24.247Z",
+    "pagination": {
+      "page": 1,
+      "limit": 5,
+      "total": 3,
+      "totalPages": 1
+    }
+  }
+}

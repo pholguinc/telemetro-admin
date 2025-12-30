@@ -1,0 +1,71 @@
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "68cdbed5d2c58dc053ca5335",
+        "name": "Moises User",
+        "username": "",
+        "phone": "+51946886667",
+        "email": "moises@telemetro.pe",
+        "role": "user",
+        "status": "inactive",
+        "points": 0,
+        "joinDate": "2025-09-19T20:36:37.652Z"
+      },
+      {
+        "id": "68cdbe4b2c032f7a9f08fa59",
+        "name": "admin2",
+        "username": "",
+        "phone": "+51985957386",
+        "email": "admin2@telemetro.pe",
+        "role": "admin",
+        "status": "inactive",
+        "points": 10000,
+        "joinDate": "2025-09-19T20:34:19.882Z"
+      },
+      {
+        "id": "68cca38cd94a0a0510d8884f",
+        "name": "Usuario",
+        "username": "",
+        "phone": "+51987654321",
+        "email": "",
+        "role": "user",
+        "status": "active",
+        "points": 0,
+        "joinDate": "2025-09-19T00:27:56.720Z"
+      },
+      {
+        "id": "68cc9e30d94a0a0510d88845",
+        "name": "Usuario",
+        "username": "",
+        "phone": "+51951654379",
+        "email": "",
+        "role": "user",
+        "status": "active",
+        "points": 0,
+        "joinDate": "2025-09-19T00:05:03.781Z"
+      },
+      {
+        "id": "68cc93f4a2c1424b3643938c",
+        "name": "953904562_streamer_926",
+        "username": "953904562_streamer_926",
+        "phone": "+51953904562",
+        "email": "streamer92226@metro.pe",
+        "role": "premium",
+        "status": "active",
+        "points": 5000,
+        "joinDate": "2025-09-18T23:21:24.507Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 5,
+      "total": 7
+    }
+  },
+  "error": null,
+  "meta": {
+    "timestamp": "2025-09-20T03:07:05.164Z"
+  }
+}

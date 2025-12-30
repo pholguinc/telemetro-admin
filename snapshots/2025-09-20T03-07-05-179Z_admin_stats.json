@@ -1,0 +1,25 @@
+{
+  "success": true,
+  "data": {
+    "users": {
+      "total": 7,
+      "active": 5
+    },
+    "banners": {
+      "total": 2,
+      "active": 2
+    },
+    "games": {
+      "total": 0,
+      "active": 0
+    },
+    "jobs": {
+      "total": 6,
+      "active": 6
+    }
+  },
+  "error": null,
+  "meta": {
+    "timestamp": "2025-09-20T03:07:05.178Z"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "68ce10f50204e729fc45ac5c",
+      "title": "test",
+      "subtitle": "test",
+      "description": "test",
+      "type": "promotional",
+      "status": "active",
+      "imageUrl": "/uploads/banner-1758335221170-6410235-mobile.webp",
+      "backgroundColor": "#FF6B35",
+      "textColor": "#FFFFFF",
+      "gradient": {
+        "colors": [],
+        "direction": "diagonal"
+      },
+      "actionType": "none",
+      "targetAudience": {
+        "roles": [],
+        "location": []
+      },
+      "schedule": {
+        "startDate": "2025-09-20T02:27:01.336Z",
+        "endDate": "2026-09-20T02:27:01.337Z",
+        "timezone": "America/Lima"
+      },
+      "impressions": 0,
+      "clicks": 0,
+      "metadata": {
+        "isAnimated": false
+      },
+      "isActive": true,
+      "priority": 1,
+      "displayOrder": 1,
+      "createdBy": {
+        "_id": "68c63dcde7df080be8c6120e",
+        "displayName": "Admin TeleMetro"
+      },
+      "createdAt": "2025-09-20T02:27:01.349Z",
+      "updatedAt": "2025-09-20T02:27:04.267Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc9708c7a64d048ac8633a",
+      "title": "test",
+      "subtitle": "test",
+      "description": "test",
+      "type": "promotional",
+      "status": "active",
+      "imageUrl": "/uploads/banner-1758238471773-689362636-mobile.webp",
+      "backgroundColor": "#FF6B35",
+      "textColor": "#FFFFFF",
+      "gradient": {
+        "colors": [],
+        "direction": "diagonal"
+      },
+      "actionType": "none",
+      "targetAudience": {
+        "roles": [],
+        "location": []
+      },
+      "schedule": {
+        "startDate": "2025-09-18T23:34:31.964Z",
+        "endDate": "2026-09-18T23:34:31.965Z",
+        "timezone": "America/Lima"
+      },
+      "impressions": 0,
+      "clicks": 0,
+      "metadata": {
+        "isAnimated": false
+      },
+      "isActive": true,
+      "priority": 1,
+      "displayOrder": 1,
+      "createdBy": {
+        "_id": "68c63dcde7df080be8c6120e",
+        "displayName": "Admin TeleMetro"
+      },
+      "createdAt": "2025-09-18T23:34:32.301Z",
+      "updatedAt": "2025-09-20T02:36:36.729Z",
+      "__v": 0
+    }
+  ],
+  "error": null,
+  "meta": {
+    "timestamp": "2025-09-20T03:07:05.254Z",
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 2,
+      "totalPages": 1
+    }
+  }
+}
