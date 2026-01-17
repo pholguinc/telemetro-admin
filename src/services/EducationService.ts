@@ -68,6 +68,10 @@ export const EducationService = {
     const response = await api.get(`/admin/enrollments?${queryParams}`);
     return response.data;
   },
+  getCourseLessons: async (courseId: string) => {
+    const response = await api.get(`/microcourses/${courseId}/lessons`);
+    return response.data;
+  },
   createLesson: async (
     courseId: string,
     lessonData: Record<string, unknown>

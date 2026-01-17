@@ -33,6 +33,9 @@ interface Course {
   instructor: Instructor;
   lessons: Lesson[];
   tags: string[];
+  trailerVideoUrl?: string;
+  lessonsCount?: number;
+  duration?: number;
 }
 
 interface CourseFormData {
@@ -50,6 +53,7 @@ interface CourseFormData {
   tags: string[];
   lessonsCount: number; // Número de lecciones planificadas
   estimatedDuration: number; // Duración estimada en minutos
+  trailerVideoUrl: string;
 }
 
 interface CourseModalProps {
@@ -87,18 +91,21 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
     lessons: [],
     tags: [],
     lessonsCount: 1,
-    estimatedDuration: 60
+    estimatedDuration: 60,
+    trailerVideoUrl: ''
   });
 
   const [currentTag, setCurrentTag] = useState<string>('');
 
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useEducationCategories();
-  
+
   // Debug para ver qué está pasando con las categorías
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse();
 
-  const categories: Category[] = Array.isArray(categoriesData?.categories) ? categoriesData.categories : [];
+  const categories: Category[] = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData as any)?.categories || [];
   const isEditing = !!course;
   const isLoading = createCourse.isPending || updateCourse.isPending;
 
@@ -122,7 +129,8 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
         lessons: course.lessons || [],
         tags: course.tags || [],
         lessonsCount: course.lessonsCount || 1,
-        estimatedDuration: course.duration || 60
+        estimatedDuration: course.duration || 60,
+        trailerVideoUrl: course.trailerVideoUrl || ''
       });
     } else if (isOpen) {
       // Reset form for new course
@@ -144,7 +152,8 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
         lessons: [],
         tags: [],
         lessonsCount: 1,
-        estimatedDuration: 60
+        estimatedDuration: 60,
+        trailerVideoUrl: ''
       });
     }
   }, [course, isOpen]);
@@ -152,7 +161,7 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -200,17 +209,17 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
       toast.error('El título es requerido');
       return;
     }
-    
+
     if (!formData.shortDescription.trim()) {
       toast.error('La descripción corta es requerida');
       return;
     }
-    
+
     if (!formData.instructor.name.trim()) {
       toast.error('El nombre del instructor es requerido');
       return;
     }
-    
+
     if (!formData.instructor.bio.trim()) {
       toast.error('La biografía del instructor es requerida');
       return;
@@ -235,15 +244,16 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
         status: formData.status,
         isActive: formData.status === 'published',
         isFeatured: formData.isFeatured,
-        tags: formData.tags || []
+        tags: formData.tags || [],
+        trailerVideoUrl: formData.trailerVideoUrl
       };
 
       console.log('🔍 Sending course data:', courseData);
 
       if (isEditing && course) {
-        await updateCourse.mutateAsync({ 
-          courseId: course.id, 
-          courseData 
+        await updateCourse.mutateAsync({
+          courseId: course.id,
+          courseData
         });
       } else {
         await createCourse.mutateAsync(courseData);
@@ -264,7 +274,7 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
       onClick={handleOverlayClick}
     >
@@ -498,6 +508,21 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
                   placeholder="https://..."
                 />
               </div>
+
+              <div>
+                <label htmlFor="trailerVideoUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                  URL del Trailer (YouTube)
+                </label>
+                <input
+                  type="url"
+                  id="trailerVideoUrl"
+                  name="trailerVideoUrl"
+                  value={formData.trailerVideoUrl}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
             </div>
 
             <div className="mt-4">
@@ -545,7 +570,7 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
                 <span>Agregar</span>
               </button>
             </div>
-            
+
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map((tag, index) => (
@@ -591,7 +616,7 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
             >
               Cancelar
             </button>
-            
+
             <button
               type="submit"
               disabled={isLoading}
@@ -603,8 +628,8 @@ const CourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, course = nul
                 <Save className="h-5 w-5" />
               )}
               <span>
-                {isLoading 
-                  ? 'Guardando...' 
+                {isLoading
+                  ? 'Guardando...'
                   : (isEditing ? 'Actualizar Curso' : 'Crear Curso')
                 }
               </span>

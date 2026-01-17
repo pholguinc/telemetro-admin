@@ -101,12 +101,15 @@ export const useClip = (id: string) => {
 // Hook para actualizar clip
 export const useUpdateClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Clip, Error, { id: string; data: UpdateClipData }>({
-    mutationFn: ({ id, data }: { id: string; data: UpdateClipData }) => 
+    mutationFn: ({ id, data }: { id: string; data: UpdateClipData }) =>
       ClipsService.update(id, data as Record<string, unknown>),
-    onSuccess: (updatedClip) => {
-      queryClient.invalidateQueries({ queryKey: ['clips'] });
+    onSuccess: async (updatedClip) => {
+      // Invalidation agresiva para forzar recarga real desde DB
+      await queryClient.invalidateQueries({ queryKey: ['clips'] });
+      await queryClient.refetchQueries({ queryKey: ['clips'] });
+
       queryClient.invalidateQueries({ queryKey: ['clips', updatedClip.id] });
       queryClient.invalidateQueries({ queryKey: ['clips-stats'] });
       toast.success('Clip actualizado exitosamente');
@@ -121,7 +124,7 @@ export const useUpdateClip = () => {
 // Hook para eliminar clip
 export const useDeleteClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, string>({
     mutationFn: (id: string) => ClipsService.delete(id),
     onSuccess: () => {
@@ -139,11 +142,15 @@ export const useDeleteClip = () => {
 // Hook para crear clip
 export const useCreateClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Clip, Error, any>({
     mutationFn: (clipData: any) => ClipsService.create(clipData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clips'] });
+    onSuccess: async () => {
+      // Invalidation agresiva para ignorar la respuesta inmediata del create (que podría venir con draft)
+      // y forzar la recarga de la lista real desde el servidor
+      await queryClient.invalidateQueries({ queryKey: ['clips'] });
+      await queryClient.refetchQueries({ queryKey: ['clips'] });
+
       queryClient.invalidateQueries({ queryKey: ['clips-stats'] });
       toast.success('Clip creado exitosamente');
     },
@@ -157,9 +164,9 @@ export const useCreateClip = () => {
 // Hook para destacar/quitar destacado de clip
 export const useFeatureClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Clip, Error, { id: string; featured: boolean }>({
-    mutationFn: ({ id, featured }: { id: string; featured: boolean }) => 
+    mutationFn: ({ id, featured }: { id: string; featured: boolean }) =>
       featured ? ClipsService.feature(id) : ClipsService.unfeature(id),
     onSuccess: (_, { featured }) => {
       queryClient.invalidateQueries({ queryKey: ['clips'] });
@@ -176,7 +183,7 @@ export const useFeatureClip = () => {
 // Hook para aprobar clip
 export const useApproveClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Clip, Error, string>({
     mutationFn: (id: string) => ClipsService.approve(id),
     onSuccess: () => {
@@ -194,9 +201,9 @@ export const useApproveClip = () => {
 // Hook para rechazar clip
 export const useRejectClip = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Clip, Error, { id: string; reason?: string }>({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) => 
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
       ClipsService.reject(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clips'] });

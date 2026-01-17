@@ -1,8 +1,8 @@
 import api from './httpClient';
 
 export const AuthService = {
-  login: async (phone: string, pin: string) => {
-    const response = await api.post('/auth/login-pin', { phone, pin });
+  login: async (email: string, pin: string) => {
+    const response = await api.post('/auth/login-email', { email, pin });
     return response.data;
   },
   logout: () => {

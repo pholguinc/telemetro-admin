@@ -17,7 +17,7 @@ interface Course {
     bio?: string;
   };
   thumbnailUrl?: string;
-  videoUrl?: string;
+  trailerVideoUrl?: string;
   materials?: Array<{
     type: 'pdf' | 'video' | 'link';
     title: string;
@@ -87,18 +87,27 @@ interface CreateCourseData extends Record<string, unknown> {
   title: string;
   description: string;
   category: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  // Support both level and difficulty for compatibility
+  level?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
   duration: number;
-  instructorId: string;
+  // Support both instructorId and instructor object
+  instructorId?: string;
+  instructor?: {
+    name: string;
+    bio: string;
+    avatarUrl?: string;
+  };
+  lessonsCount?: number;
   thumbnailUrl?: string;
-  videoUrl?: string;
+  trailerVideoUrl?: string;
   price: number;
   pointsRequired?: number;
   isActive?: boolean;
   isFeatured?: boolean;
 }
 
-interface UpdateCourseData extends Partial<CreateCourseData> {}
+interface UpdateCourseData extends Partial<CreateCourseData> { }
 
 interface CreateLessonData extends Record<string, unknown> {
   courseId: string;
@@ -110,7 +119,7 @@ interface CreateLessonData extends Record<string, unknown> {
   isPreview?: boolean;
 }
 
-interface UpdateLessonData extends Partial<CreateLessonData> {}
+interface UpdateLessonData extends Partial<CreateLessonData> { }
 
 interface CourseFilters extends Record<string, unknown> {
   category?: string;
@@ -180,8 +189,7 @@ export const useEducationStats = () => {
     queryKey: ['education', 'stats'],
     queryFn: async () => {
       try {
-        const response = await educationService.getStats?.() || 
-                         await educationService.getGeneralStats?.();
+        const response = await educationService.getGeneralStats();
         return response?.data || {
           totalCourses: 0,
           activeCourses: 0,
@@ -212,7 +220,7 @@ export const useEnrollments = (params: EnrollmentFilters = {}) => {
   return useQuery<Enrollment[]>({
     queryKey: ['education', 'enrollments', params],
     queryFn: async () => {
-      const response = await educationService.getEnrollments(params);
+      const response = await educationService.getAllEnrollments(params);
       return response.data || [];
     },
     staleTime: 1 * 60 * 1000, // 1 minuto
@@ -222,7 +230,7 @@ export const useEnrollments = (params: EnrollmentFilters = {}) => {
 // Mutations para gestión de cursos
 export const useCreateCourse = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Course, Error, CreateCourseData>({
     mutationFn: (courseData: CreateCourseData) => educationService.createCourse(courseData),
     onSuccess: () => {
@@ -239,9 +247,9 @@ export const useCreateCourse = () => {
 
 export const useUpdateCourse = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Course, Error, { courseId: string; courseData: UpdateCourseData }>({
-    mutationFn: ({ courseId, courseData }: { courseId: string; courseData: UpdateCourseData }) => 
+    mutationFn: ({ courseId, courseData }: { courseId: string; courseData: UpdateCourseData }) =>
       educationService.updateCourse(courseId, courseData),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['education', 'courses'] });
@@ -257,7 +265,7 @@ export const useUpdateCourse = () => {
 
 export const useDeleteCourse = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, string>({
     mutationFn: (courseId: string) => educationService.deleteCourse(courseId),
     onSuccess: () => {
@@ -275,9 +283,9 @@ export const useDeleteCourse = () => {
 // Mutations para gestión de lecciones
 export const useCreateLesson = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<Lesson, Error, CreateLessonData>({
-    mutationFn: (lessonData: CreateLessonData) => educationService.createLesson(lessonData),
+    mutationFn: (lessonData: CreateLessonData) => educationService.createLesson(lessonData.courseId, lessonData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['education', 'courses', data.courseId, 'lessons'] });
       queryClient.invalidateQueries({ queryKey: ['education', 'courses', data.courseId] });
@@ -292,10 +300,10 @@ export const useCreateLesson = () => {
 
 export const useUpdateLesson = () => {
   const queryClient = useQueryClient();
-  
-  return useMutation<Lesson, Error, { lessonId: string; lessonData: UpdateLessonData }>({
-    mutationFn: ({ lessonId, lessonData }: { lessonId: string; lessonData: UpdateLessonData }) => 
-      educationService.updateLesson(lessonId, lessonData),
+
+  return useMutation<Lesson, Error, { courseId: string; lessonId: string; lessonData: UpdateLessonData }>({
+    mutationFn: ({ courseId, lessonId, lessonData }) =>
+      educationService.updateLesson(courseId, lessonId, lessonData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['education', 'courses', data.courseId, 'lessons'] });
       toast.success('Lección actualizada exitosamente');
@@ -309,10 +317,10 @@ export const useUpdateLesson = () => {
 
 export const useDeleteLesson = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation<void, Error, { lessonId: string; courseId: string }>({
-    mutationFn: ({ lessonId }: { lessonId: string; courseId: string }) => 
-      educationService.deleteLesson(lessonId),
+    mutationFn: ({ courseId, lessonId }: { lessonId: string; courseId: string }) =>
+      educationService.deleteLesson(courseId, lessonId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['education', 'courses', variables.courseId, 'lessons'] });
       toast.success('Lección eliminada exitosamente');
@@ -356,8 +364,8 @@ export const useFeaturedCourses = () => {
   return useQuery<Course[]>({
     queryKey: ['education', 'courses', { isFeatured: true }],
     queryFn: async () => {
-      const response = await educationService.getFeaturedCourses?.() || 
-                      await educationService.getAllCourses({ isFeatured: true });
+      const response = await educationService.getFeaturedCourses?.() ||
+        await educationService.getAllCourses({ isFeatured: true });
       return response?.data || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

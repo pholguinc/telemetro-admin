@@ -25,7 +25,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (phone: string, pin: string) => Promise<LoginResponse>;
+  login: (email: string, pin: string) => Promise<LoginResponse>;
   logout: () => void;
 }
 
@@ -77,35 +77,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Verificar si hay un usuario guardado al cargar
     const savedUser = authService.getCurrentUser();
     const token = authService.getToken();
-    
+
     if (savedUser && token) {
       setUser(savedUser);
       setIsAuthenticated(true);
     }
-    
+
     setLoading(false);
   }, []);
 
-  const login = async (phone: string, pin: string): Promise<LoginResponse> => {
+  const login = async (email: string, pin: string): Promise<LoginResponse> => {
     try {
       setLoading(true);
-      
-      // Asegurar formato de teléfono
-      const formattedPhone = phone.startsWith('+51') ? phone : `+51${phone}`;
-      
-      const response: ApiResponse = await authService.login(formattedPhone, pin);
-      
+
+      const response: ApiResponse = await authService.login(email, pin);
+
       if (response.success && response.data.user.role === 'admin') {
         const { token, user: userData } = response.data;
-        
+
         // Guardar en localStorage
         localStorage.setItem('adminToken', token);
         localStorage.setItem('adminUser', JSON.stringify(userData));
-        
+
         // Actualizar estado
         setUser(userData);
         setIsAuthenticated(true);
-        
+
         toast.success('¡Bienvenido al panel de administración!');
         return { success: true };
       } else {

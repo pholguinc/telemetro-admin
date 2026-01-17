@@ -6,7 +6,7 @@ import FileUploader from '../../../components/ui/FileUploader';
 export interface ProductDraft {
   name: string;
   description: string;
-  category: 'digital' | 'physical' | 'premium' | 'food' | 'entertainment' | 'services' | 'other';
+  category: 'food_drink' | 'entertainment' | 'transport' | 'services' | 'shopping' | 'health' | 'education' | 'other';
   pointsCost: number;
   stock: number;
   imageUrl: string;
@@ -44,13 +44,14 @@ interface ProductFormModalProps {
 }
 
 const CATEGORIES = [
-  { value: 'digital', label: 'Digital' },
-  { value: 'physical', label: 'Físico' },
-  { value: 'premium', label: 'Premium' },
-  { value: 'food', label: 'Comida' },
+  { value: 'food_drink', label: 'Comida' },
   { value: 'entertainment', label: 'Entretenimiento' },
+  { value: 'transport', label: 'Transporte' },
   { value: 'services', label: 'Servicios' },
-  { value: 'other', label: 'Otro' },
+  { value: 'shopping', label: 'Tiendas' },
+  { value: 'health', label: 'Salud' },
+  { value: 'education', label: 'Educación' },
+  { value: 'other', label: 'Otros' },
 ];
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -76,7 +77,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       !draft.provider ||
       draft.pointsCost <= 0 ||
       draft.stock < 0 ||
-      (draft.category === 'digital' && (!draft.validityMinutes || draft.validityMinutes <= 0))
+      (draft.category === 'entertainment' && (!draft.validityMinutes || draft.validityMinutes <= 0))
     ) {
       setFormSubmitted(true);
       return;
@@ -295,7 +296,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                         )}
                       </div>
 
-                      {draft.category === 'digital' && (
+                      {draft.category === 'entertainment' && (
                         <div>
                           <label htmlFor="validityMinutes" className="block text-sm font-medium text-gray-700 mb-2">
                             <Clock className="h-4 w-4 inline mr-2" />
@@ -314,7 +315,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                                 : 'border-gray-300'
                             } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
                             placeholder="Ej: 1440 (24 horas)"
-                            required={draft.category === 'digital'}
+                            required={draft.category === 'entertainment'}
                             aria-invalid={
                               (!draft.validityMinutes || draft.validityMinutes <= 0) && formSubmitted
                                 ? 'true'

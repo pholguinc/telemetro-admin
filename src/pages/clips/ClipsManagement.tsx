@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, Fragment } from "react";
+﻿import React, { useState, useMemo, useCallback, Fragment } from "react";
 import {
   PlayCircle,
   Eye,
@@ -162,14 +162,18 @@ const useClipForm = (
       const { name, value, type } = e.target;
       const checked = (e.target as HTMLInputElement).checked;
 
+      if (name === 'status') {
+        console.log("🔄 NUEVO ESTADO SELECCIONADO:", value);
+      }
+
       setDraft((prev) => ({
         ...prev,
         [name]:
           type === "checkbox"
             ? checked
             : type === "number"
-            ? parseFloat(value) || 0
-            : value,
+              ? parseFloat(value) || 0
+              : value,
       }));
     },
     []
@@ -357,43 +361,43 @@ const ClipFilters: React.FC<{
   onStatusChange,
   onCategoryChange,
 }) => (
-  <div className="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
-    <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-      <input
-        type="text"
-        placeholder="Buscar clips..."
-        value={search}
-        onChange={onSearchChange}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
-        aria-label="Buscar clips por título o descripción"
-      />
-      <select
-        value={status}
-        onChange={onStatusChange}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        aria-label="Filtrar por estado"
-      >
-        {STATUSES.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <select
-        value={category}
-        onChange={onCategoryChange}
-        className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        aria-label="Filtrar por categoría"
-      >
-        {CATEGORIES.map(({ value, label }) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
+    <div className="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <input
+          type="text"
+          placeholder="Buscar clips..."
+          value={search}
+          onChange={onSearchChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1"
+          aria-label="Buscar clips por título o descripción"
+        />
+        <select
+          value={status}
+          onChange={onStatusChange}
+          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Filtrar por estado"
+        >
+          {STATUSES.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={category}
+          onChange={onCategoryChange}
+          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Filtrar por categoría"
+        >
+          {CATEGORIES.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
-  </div>
-);
+  );
 
 // Componente para Tags Input con chips
 const TagsInput: React.FC<{
@@ -406,8 +410,10 @@ const TagsInput: React.FC<{
   const [inputValue, setInputValue] = useState("");
 
   const addTag = () => {
-    if (inputValue.trim() && !tags.includes(inputValue.trim())) {
-      onTagsChange([...tags, inputValue.trim()]);
+    // Backend espera strings puros sin #
+    const rawInput = inputValue.trim().replace(/^#/, '');
+    if (rawInput && !tags.includes(rawInput)) {
+      onTagsChange([...tags, rawInput]);
       setInputValue("");
     }
   };
@@ -496,7 +502,7 @@ const ClipsManagement: React.FC = () => {
       channel: "",
       avatarUrl: "",
     },
-    status: "draft",
+    status: "active",
     isVertical: true,
     quality: "medium",
     hashtags: [],
@@ -618,12 +624,43 @@ const ClipsManagement: React.FC = () => {
 
       if (editing) {
         console.log("✏️ MODO EDICIÓN - Enviando a ID:", editing.id);
-        await updateClip.mutateAsync({ id: editing.id, data: cleanedData });
+        const updateData = {
+          ...cleanedData,
+          creator: {
+            ...cleanedData.creator,
+            avatarUrl: draft.creator.avatarUrl?.trim() || undefined,
+          }
+        };
+        await updateClip.mutateAsync({ id: editing.id, data: updateData });
         toast.success("Clip actualizado con éxito");
         setEditing(null);
       } else {
         console.log("➕ MODO CREACIÓN - Creando nuevo clip");
-        await createClip.mutateAsync(cleanedData);
+        // Estructura completa para crear clip según requerimiento actualizado
+        const createPayload = {
+          title: draft.title.trim(),
+          description: draft.description.trim(),
+          category: draft.category,
+          status: draft.status,
+          youtubeId: draft.youtubeId,
+          youtubeUrl: draft.youtubeUrl,
+          thumbnailUrl: draft.thumbnailUrl || "https://via.placeholder.com/640x360.png?text=No+Thumbnail",
+          duration: draft.duration,
+          creator: {
+            name: draft.creator.name.trim(),
+            channel: draft.creator.channel.trim()
+          },
+          hashtags: draft.hashtags.map(t => t.replace(/^#/, '')),
+          priority: draft.priority,
+          isFeatured: draft.isFeatured,
+          quality: draft.quality,
+          isVertical: draft.isVertical
+        };
+
+        console.log("📦 PAYLOAD CREACIÓN:", createPayload);
+        console.log("📢 ESTADO DEL CLIP QUE SE ESTÁ SUBIENDO:", createPayload.status);
+
+        await createClip.mutateAsync(createPayload);
         toast.success("Clip creado con éxito");
       }
 
@@ -1090,480 +1127,475 @@ const ClipFormModal: React.FC<{
   resetForm,
   isPending,
 }) => {
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (
-      !draft.title ||
-      !draft.description ||
-      !draft.youtubeUrl ||
-      !draft.creator.name ||
-      !draft.creator.channel ||
-      draft.duration <= 0
-    ) {
-      setFormSubmitted(true);
-      toast.error("Por favor, completa todos los campos requeridos.");
-      return;
-    }
-    await handleSubmit(e);
-    onClose();
-  };
+    const onSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (
+        !draft.title ||
+        !draft.description ||
+        !draft.youtubeUrl ||
+        !draft.creator.name ||
+        !draft.creator.channel ||
+        draft.duration <= 0
+      ) {
+        setFormSubmitted(true);
+        toast.error("Por favor, completa todos los campos requeridos.");
+        return;
+      }
+      await handleSubmit(e);
+      onClose();
+    };
 
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+    const handleClose = () => {
+      resetForm();
+      onClose();
+    };
 
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog className="relative z-50" onClose={handleClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
-        </Transition.Child>
+    return (
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog className="relative z-50" onClose={handleClose}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
-                <div className="p-6">
-                  {/* Header del Modal */}
-                  <div className="flex items-center justify-between mb-6">
-                    <Dialog.Title className="text-xl font-semibold text-gray-900">
-                      {editing ? "Editar Clip" : "Crear Nuevo Clip"}
-                    </Dialog.Title>
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                      aria-label="Cerrar modal"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <form onSubmit={onSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="title"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Título *
-                        </label>
-                        <input
-                          type="text"
-                          id="title"
-                          name="title"
-                          value={draft.title}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-2 border ${
-                            !draft.title && formSubmitted
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                          placeholder="Título del clip"
-                          required
-                        />
-                        {!draft.title && formSubmitted && (
-                          <p className="text-red-500 text-sm mt-1">Requerido</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="category"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Categoría *
-                        </label>
-                        <select
-                          id="category"
-                          name="category"
-                          value={draft.category}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {CLIP_CATEGORIES.map(({ value, label }) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Descripción *
-                      </label>
-                      <textarea
-                        id="description"
-                        name="description"
-                        value={draft.description}
-                        onChange={handleInputChange}
-                        rows={3}
-                        className={`w-full px-4 py-2 border ${
-                          !draft.description && formSubmitted
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
-                        placeholder="Descripción del clip..."
-                        required
-                      />
-                      {!draft.description && formSubmitted && (
-                        <p className="text-red-500 text-sm mt-1">Requerido</p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <FileUploader
-                          accept="video"
-                          currentUrl={draft.youtubeUrl}
-                          onUpload={async (file: File) => {
-                            console.log(
-                              "📹 Iniciando upload de video:",
-                              file.name
-                            );
-
-                            const newUrl = await handleVideoUpload(file);
-
-                            console.log("✅ Video subido exitosamente");
-                            console.log("🔗 Nueva URL:", newUrl);
-                            console.log(
-                              "📋 Draft ANTES de forzar actualización:",
-                              draft.youtubeUrl
-                            );
-
-                            // ⚠️ FORZAR actualización del estado
-                            setDraft((prev) => {
-                              const updated = {
-                                ...prev,
-                                youtubeUrl: newUrl,
-                                youtubeId: `clip_${Date.now()}_${Math.random()
-                                  .toString(36)
-                                  .substr(2, 9)}`,
-                              };
-                              console.log(
-                                "🔄 Draft DESPUÉS de actualizar:",
-                                updated.youtubeUrl
-                              );
-                              return updated;
-                            });
-
-                            return newUrl;
-                          }}
-                          onRemove={() => {
-                            console.log("🗑️ Removiendo video del draft");
-                            console.log(
-                              "📋 Draft antes de remover:",
-                              draft.youtubeUrl
-                            );
-                            handleRemoveVideo();
-                          }}
-                          label="Video del Clip *"
-                          required={true}
-                          maxSize={100}
-                          className="w-full"
-                        />
-                        {!draft.youtubeUrl && formSubmitted && (
-                          <p className="text-red-500 text-sm mt-1">Requerido</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <FileUploader
-                          accept="image"
-                          currentUrl={draft.thumbnailUrl}
-                          onUpload={handleThumbnailUpload}
-                          onRemove={handleRemoveThumbnail}
-                          label="Thumbnail (Opcional)"
-                          required={false}
-                          maxSize={5}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="duration"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Duración (segundos) *
-                        </label>
-                        <input
-                          type="number"
-                          id="duration"
-                          name="duration"
-                          value={draft.duration}
-                          onChange={handleInputChange}
-                          className={`w-full px-4 py-2 border ${
-                            draft.duration <= 0 && formSubmitted
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                          placeholder="30"
-                          min="1"
-                          max="180"
-                          required
-                        />
-                        {draft.duration <= 0 && formSubmitted && (
-                          <p className="text-red-500 text-sm mt-1">
-                            Debe ser mayor a 0
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="quality"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Calidad
-                        </label>
-                        <select
-                          id="quality"
-                          name="quality"
-                          value={draft.quality}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="low">Baja</option>
-                          <option value="medium">Media</option>
-                          <option value="high">Alta</option>
-                          <option value="hd">HD</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="creatorName"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Nombre del Creador *
-                        </label>
-                        <input
-                          type="text"
-                          id="creatorName"
-                          name="creatorName"
-                          value={draft.creator.name}
-                          onChange={(e) =>
-                            setDraft((prev) => ({
-                              ...prev,
-                              creator: {
-                                ...prev.creator,
-                                name: e.target.value,
-                              },
-                            }))
-                          }
-                          className={`w-full px-4 py-2 border ${
-                            !draft.creator.name && formSubmitted
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                          placeholder="Nombre del creador"
-                          required
-                        />
-                        {!draft.creator.name && formSubmitted && (
-                          <p className="text-red-500 text-sm mt-1">Requerido</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="creatorChannel"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Canal del Creador *
-                        </label>
-                        <input
-                          type="text"
-                          id="creatorChannel"
-                          name="creatorChannel"
-                          value={draft.creator.channel}
-                          onChange={(e) =>
-                            setDraft((prev) => ({
-                              ...prev,
-                              creator: {
-                                ...prev.creator,
-                                channel: e.target.value,
-                              },
-                            }))
-                          }
-                          className={`w-full px-4 py-2 border ${
-                            !draft.creator.channel && formSubmitted
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                          placeholder="@nombrecanal"
-                          required
-                        />
-                        {!draft.creator.channel && formSubmitted && (
-                          <p className="text-red-500 text-sm mt-1">Requerido</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label
-                          htmlFor="status"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Estado *
-                        </label>
-                        <select
-                          id="status"
-                          name="status"
-                          value={draft.status}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          {FORM_STATUSES.map(({ value, label }) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="priority"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Prioridad (1-10)
-                        </label>
-                        <input
-                          type="number"
-                          id="priority"
-                          name="priority"
-                          value={draft.priority}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="1"
-                          min="1"
-                          max="10"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <TagsInput
-                        label="Hashtags"
-                        placeholder="Agregar hashtag..."
-                        tags={draft.hashtags}
-                        onTagsChange={(hashtags) =>
-                          setDraft((prev) => ({ ...prev, hashtags }))
-                        }
-                        chipColor="purple"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            name="isFeatured"
-                            checked={draft.isFeatured}
-                            onChange={handleInputChange}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">
-                            Destacar clip
-                          </span>
-                        </label>
-                      </div>
-
-                      <div>
-                        <label className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            name="isVertical"
-                            checked={draft.isVertical}
-                            onChange={handleInputChange}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">
-                            Video vertical
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-4">
-                      {editing && (
-                        <button
-                          type="button"
-                          onClick={handleClose}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      )}
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+                  <div className="p-6">
+                    {/* Header del Modal */}
+                    <div className="flex items-center justify-between mb-6">
+                      <Dialog.Title className="text-xl font-semibold text-gray-900">
+                        {editing ? "Editar Clip" : "Crear Nuevo Clip"}
+                      </Dialog.Title>
                       <button
-                        type="submit"
-                        disabled={isPending}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        type="button"
+                        onClick={handleClose}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Cerrar modal"
                       >
-                        {isPending ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        ) : (
-                          <Plus className="h-5 w-5" />
-                        )}
-                        <span>
-                          {isPending
-                            ? "Guardando..."
-                            : editing
-                            ? "Actualizar"
-                            : "Crear Clip"}
-                        </span>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
                       </button>
                     </div>
-                  </form>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+
+                    <form onSubmit={onSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label
+                            htmlFor="title"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Título *
+                          </label>
+                          <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value={draft.title}
+                            onChange={handleInputChange}
+                            className={`w-full px-4 py-2 border ${!draft.title && formSubmitted
+                              ? "border-red-500"
+                              : "border-gray-300"
+                              } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                            placeholder="Título del clip"
+                            required
+                          />
+                          {!draft.title && formSubmitted && (
+                            <p className="text-red-500 text-sm mt-1">Requerido</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="category"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Categoría *
+                          </label>
+                          <select
+                            id="category"
+                            name="category"
+                            value={draft.category}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            {CLIP_CATEGORIES.map(({ value, label }) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Descripción *
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={draft.description}
+                          onChange={handleInputChange}
+                          rows={3}
+                          className={`w-full px-4 py-2 border ${!draft.description && formSubmitted
+                            ? "border-red-500"
+                            : "border-gray-300"
+                            } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
+                          placeholder="Descripción del clip..."
+                          required
+                        />
+                        {!draft.description && formSubmitted && (
+                          <p className="text-red-500 text-sm mt-1">Requerido</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <FileUploader
+                            accept="video"
+                            currentUrl={draft.youtubeUrl}
+                            onUpload={async (file: File) => {
+                              console.log(
+                                "📹 Iniciando upload de video:",
+                                file.name
+                              );
+
+                              const newUrl = await handleVideoUpload(file);
+
+                              console.log("✅ Video subido exitosamente");
+                              console.log("🔗 Nueva URL:", newUrl);
+                              console.log(
+                                "📋 Draft ANTES de forzar actualización:",
+                                draft.youtubeUrl
+                              );
+
+                              // ⚠️ FORZAR actualización del estado
+                              setDraft((prev) => {
+                                const updated = {
+                                  ...prev,
+                                  youtubeUrl: newUrl,
+                                  youtubeId: `clip_${Date.now()}_${Math.random()
+                                    .toString(36)
+                                    .substr(2, 9)}`,
+                                };
+                                console.log(
+                                  "🔄 Draft DESPUÉS de actualizar:",
+                                  updated.youtubeUrl
+                                );
+                                return updated;
+                              });
+
+                              return newUrl;
+                            }}
+                            onRemove={() => {
+                              console.log("🗑️ Removiendo video del draft");
+                              console.log(
+                                "📋 Draft antes de remover:",
+                                draft.youtubeUrl
+                              );
+                              handleRemoveVideo();
+                            }}
+                            label="Video del Clip *"
+                            required={true}
+                            maxSize={100}
+                            className="w-full"
+                          />
+                          {!draft.youtubeUrl && formSubmitted && (
+                            <p className="text-red-500 text-sm mt-1">Requerido</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <FileUploader
+                            accept="image"
+                            currentUrl={draft.thumbnailUrl}
+                            onUpload={handleThumbnailUpload}
+                            onRemove={handleRemoveThumbnail}
+                            label="Thumbnail (Opcional)"
+                            required={false}
+                            maxSize={5}
+                            className="w-full"
+                          />
+                        </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label
+                              htmlFor="duration"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Duración (segundos) *
+                            </label>
+                            <input
+                              type="number"
+                              id="duration"
+                              name="duration"
+                              value={draft.duration}
+                              onChange={handleInputChange}
+                              className={`w-full px-4 py-2 border ${draft.duration <= 0 && formSubmitted
+                                ? "border-red-500"
+                                : "border-gray-300"
+                                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              placeholder="30"
+                              min="1"
+                              max="180"
+                              required
+                            />
+                            {draft.duration <= 0 && formSubmitted && (
+                              <p className="text-red-500 text-sm mt-1">
+                                Debe ser mayor a 0
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="quality"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Calidad
+                            </label>
+                            <select
+                              id="quality"
+                              name="quality"
+                              value={draft.quality}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="low">Baja</option>
+                              <option value="medium">Media</option>
+                              <option value="high">Alta</option>
+                              <option value="hd">HD</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label
+                              htmlFor="creatorName"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Nombre del Creador *
+                            </label>
+                            <input
+                              type="text"
+                              id="creatorName"
+                              name="creatorName"
+                              value={draft.creator.name}
+                              onChange={(e) =>
+                                setDraft((prev) => ({
+                                  ...prev,
+                                  creator: {
+                                    ...prev.creator,
+                                    name: e.target.value,
+                                  },
+                                }))
+                              }
+                              className={`w-full px-4 py-2 border ${!draft.creator.name && formSubmitted
+                                ? "border-red-500"
+                                : "border-gray-300"
+                                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              placeholder="Nombre del creador"
+                              required
+                            />
+                            {!draft.creator.name && formSubmitted && (
+                              <p className="text-red-500 text-sm mt-1">Requerido</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="creatorChannel"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Canal del Creador *
+                            </label>
+                            <input
+                              type="text"
+                              id="creatorChannel"
+                              name="creatorChannel"
+                              value={draft.creator.channel}
+                              onChange={(e) =>
+                                setDraft((prev) => ({
+                                  ...prev,
+                                  creator: {
+                                    ...prev.creator,
+                                    channel: e.target.value,
+                                  },
+                                }))
+                              }
+                              className={`w-full px-4 py-2 border ${!draft.creator.channel && formSubmitted
+                                ? "border-red-500"
+                                : "border-gray-300"
+                                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              placeholder="@nombrecanal"
+                              required
+                            />
+                            {!draft.creator.channel && formSubmitted && (
+                              <p className="text-red-500 text-sm mt-1">Requerido</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label
+                              htmlFor="status"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Estado *
+                            </label>
+                            <select
+                              id="status"
+                              name="status"
+                              value={draft.status}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              {FORM_STATUSES.map(({ value, label }) => (
+                                <option key={value} value={value}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="priority"
+                              className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                              Prioridad (1-10)
+                            </label>
+                            <input
+                              type="number"
+                              id="priority"
+                              name="priority"
+                              value={draft.priority}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="1"
+                              min="1"
+                              max="10"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <TagsInput
+                            label="Hashtags"
+                            placeholder="Agregar hashtag..."
+                            tags={draft.hashtags}
+                            onTagsChange={(hashtags) =>
+                              setDraft((prev) => ({ ...prev, hashtags }))
+                            }
+                            chipColor="purple"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="isFeatured"
+                                checked={draft.isFeatured}
+                                onChange={handleInputChange}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                Destacar clip
+                              </span>
+                            </label>
+                          </div>
+
+                          <div>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="isVertical"
+                                checked={draft.isVertical}
+                                onChange={handleInputChange}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                Video vertical
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                      <div className="flex justify-end space-x-4">
+                        {editing && (
+                          <button
+                            type="button"
+                            onClick={handleClose}
+                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isPending}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isPending ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          ) : (
+                            <Plus className="h-5 w-5" />
+                          )}
+                          <span>
+                            {isPending
+                              ? "Guardando..."
+                              : editing
+                                ? "Actualizar"
+                                : "Crear Clip"}
+                          </span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
-  );
-};
+        </Dialog>
+      </Transition>
+    );
+  };
 
 export default ClipsManagement;
