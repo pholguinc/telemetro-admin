@@ -19,7 +19,7 @@ export const ClipsService = {
 
   // Crear nuevo clip
   create: async (clipData: Record<string, unknown>) => {
-    const response = await api.post('/clips/admin', clipData);
+    const response = await api.post('/clips', clipData);
     return response.data.data;
   },
 
@@ -55,19 +55,19 @@ export const ClipsService = {
 
   // Aprobar clip
   approve: async (id: string) => {
-    const response = await api.patch(`/clips/admin/${id}/moderate`, { 
-      isApproved: true, 
-      status: 'active' 
+    const response = await api.patch(`/clips/admin/${id}/moderate`, {
+      isApproved: true,
+      status: 'active'
     });
     return response.data.data;
   },
 
   // Rechazar clip
   reject: async (id: string, reason?: string) => {
-    const response = await api.patch(`/clips/admin/${id}/moderate`, { 
-      isApproved: false, 
+    const response = await api.patch(`/clips/admin/${id}/moderate`, {
+      isApproved: false,
       status: 'rejected',
-      reason 
+      reason
     });
     return response.data.data;
   },
