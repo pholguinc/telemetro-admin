@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Eye, EyeOff, Phone, Lock, LogIn } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import fondoImage from "../../assets/fondo_telemtro.png";
 
 // Types
 interface LoginFormData {
-  phone: string;
+  email: string;
   pin: string;
 }
 
 interface FormErrors {
-  phone?: string;
+  email?: string;
   pin?: string;
   submit?: string;
 }
@@ -20,7 +20,7 @@ const Login: React.FC = () => {
   const { login, loading, isAuthenticated } = useAuth();
   const [showLoginCard, setShowLoginCard] = useState<boolean>(false);
   const [formData, setFormData] = useState<LoginFormData>({
-    phone: "",
+    email: "",
     pin: "",
   });
   const [showPin, setShowPin] = useState<boolean>(false);
@@ -48,10 +48,10 @@ const Login: React.FC = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.phone) {
-      newErrors.phone = "El teléfono es requerido";
-    } else if (formData.phone.length < 9) {
-      newErrors.phone = "El teléfono debe tener al menos 9 dígitos";
+    if (!formData.email) {
+      newErrors.email = "El correo electrónico es requerido";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Ingrese un correo electrónico válido";
     }
 
     if (!formData.pin) {
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
       return;
     }
 
-    const result = await login(formData.phone, formData.pin);
+    const result = await login(formData.email, formData.pin);
 
     if (!result.success) {
       setErrors({ submit: result.error });
@@ -108,36 +108,35 @@ const Login: React.FC = () => {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Campo de teléfono */}
+              {/* Campo de Correo */}
               <div>
                 <label
-                  htmlFor="phone"
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Teléfono
+                  Correo Electrónico
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
-                    placeholder="999999999"
-                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${
-                      errors.phone
+                    placeholder="usuario@ejemplo.com"
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${errors.email
                         ? "border-red-500 focus:ring-red-500"
                         : "border-gray-300"
-                    }`}
+                      }`}
                     disabled={loading}
-                    autoComplete="tel"
+                    autoComplete="email"
                   />
                 </div>
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
 
@@ -160,11 +159,10 @@ const Login: React.FC = () => {
                     value={formData.pin}
                     onChange={handleChange}
                     placeholder="123456"
-                    className={`w-full pl-10 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${
-                      errors.pin
+                    className={`w-full pl-10 pr-10 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${errors.pin
                         ? "border-red-500 focus:ring-red-500"
                         : "border-gray-300"
-                    }`}
+                      }`}
                     disabled={loading}
                     autoComplete="current-password"
                   />

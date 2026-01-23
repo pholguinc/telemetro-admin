@@ -80,7 +80,7 @@ export const MarketplaceService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await api.post('/marketplace/admin/products/upload', formData, {
+    const response = await api.post('/ads/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

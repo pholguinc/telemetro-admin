@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-01-09T04:19:24.818Z",
+  "apiBaseUrl": "https://apis-telemetro.widecom.net/api",
+  "totalTests": 3,
+  "passed": 0,
+  "failed": 3,
+  "results": [
+    {
+      "endpoint": "/auth/login-pin",
+      "method": "POST",
+      "status": "error",
+      "statusCode": 0,
+      "responseTime": 437,
+      "description": "Login sin credenciales",
+      "error": "Hostname/IP does not match certificate's altnames: Host: apis-telemetro.widecom.net. is not in the cert's altnames: DNS:almacen.edocsperu.com",
+      "timestamp": "2026-01-09T04:19:24.326Z"
+    },
+    {
+      "endpoint": "/auth/login-pin",
+      "method": "POST",
+      "status": "error",
+      "statusCode": 0,
+      "responseTime": 269,
+      "description": "Login con credenciales inválidas",
+      "error": "Hostname/IP does not match certificate's altnames: Host: apis-telemetro.widecom.net. is not in the cert's altnames: DNS:almacen.edocsperu.com",
+      "timestamp": "2026-01-09T04:19:24.597Z"
+    },
+    {
+      "endpoint": "/auth/login-pin",
+      "method": "POST",
+      "status": "error",
+      "statusCode": 0,
+      "responseTime": 214,
+      "description": "Login con credenciales válidas",
+      "error": "Hostname/IP does not match certificate's altnames: Host: apis-telemetro.widecom.net. is not in the cert's altnames: DNS:almacen.edocsperu.com",
+      "timestamp": "2026-01-09T04:19:24.811Z"
+    }
+  ]
+}

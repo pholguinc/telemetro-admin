@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  BookOpen, 
-  Users, 
-  Award, 
-  Clock, 
-  Star, 
-  Search, 
+import {
+  Plus,
+  BookOpen,
+  Users,
+  Award,
+  Clock,
+  Star,
+  Search,
   Filter,
   RefreshCw,
   Edit,
@@ -15,9 +15,9 @@ import {
   PlayCircle,
   TrendingUp
 } from 'lucide-react';
-import { 
-  useEducationCourses, 
-  useEducationStats, 
+import {
+  useEducationCourses,
+  useEducationStats,
   useFeaturedCourses,
   useEducationCategories,
   useDeleteCourse,
@@ -41,6 +41,7 @@ interface SimpleCourse {
     avatar?: string;
   };
   thumbnailUrl?: string;
+  trailerVideoUrl?: string;
   price: number;
   isActive: boolean;
   isFeatured: boolean;
@@ -90,10 +91,10 @@ const EducationManagement: React.FC = () => {
   const [editingCourse, setEditingCourse] = useState<SimpleCourse | null>(null);
 
   // Queries
-  const { 
-    data: coursesData = [], 
-    isLoading: coursesLoading, 
-    refetch: refetchCourses 
+  const {
+    data: coursesData = [],
+    isLoading: coursesLoading,
+    refetch: refetchCourses
   } = useEducationCourses({
     search: searchTerm,
     category: categoryFilter !== 'all' ? categoryFilter : undefined,
@@ -104,64 +105,65 @@ const EducationManagement: React.FC = () => {
   const { data: statsData, isLoading: statsLoading } = useEducationStats();
   const { data: featuredData } = useFeaturedCourses();
   const { data: categoriesData } = useEducationCategories();
-  
+
   const deleteCourse = useDeleteCourse();
   const updateCourse = useUpdateCourse();
-    
+
   // Function to map backend course data to frontend format
   const mapCourseData = (backendCourse: any): SimpleCourse => {
-    
+
     return {
-    id: backendCourse._id || backendCourse.id,
-    title: backendCourse.title,
-    description: backendCourse.description,
-    shortDescription: backendCourse.shortDescription || backendCourse.summary,
-    longDescription: backendCourse.longDescription || backendCourse.fullDescription || backendCourse.description,
-    category: backendCourse.category,
-    level: backendCourse.difficulty || backendCourse.level, // Backend uses 'difficulty'
-    duration: Number(backendCourse.duration || 0),
-    instructor: {
-      id: backendCourse.instructor?.id || 'unknown',
-      name: backendCourse.instructor?.name || 'Instructor desconocido',
-      avatar: backendCourse.instructor?.avatar
-    },
-    thumbnailUrl: backendCourse.thumbnailUrl,
-    price: Number(backendCourse.price || 0),
-    isActive: backendCourse.isActive,
-    isFeatured: backendCourse.isFeatured,
-    enrollmentCount: Number(backendCourse.enrollmentCount || 0),
-    rating: Number(backendCourse.rating?.average || backendCourse.rating || 0),
-    reviewCount: Number(backendCourse.rating?.count || backendCourse.reviewCount || 0),
-    createdAt: backendCourse.createdAt,
-    updatedAt: backendCourse.updatedAt,
-    tags: Array.isArray(backendCourse.tags) ? backendCourse.tags : [],
-    status: backendCourse.status,
-    lessonsCount: backendCourse.lessonsCount
+      id: backendCourse._id || backendCourse.id,
+      title: backendCourse.title,
+      description: backendCourse.description,
+      shortDescription: backendCourse.shortDescription || backendCourse.summary,
+      longDescription: backendCourse.longDescription || backendCourse.fullDescription || backendCourse.description,
+      category: backendCourse.category,
+      level: backendCourse.difficulty || backendCourse.level, // Backend uses 'difficulty'
+      duration: Number(backendCourse.duration || 0),
+      instructor: {
+        id: backendCourse.instructor?.id || 'unknown',
+        name: backendCourse.instructor?.name || 'Instructor desconocido',
+        avatar: backendCourse.instructor?.avatar
+      },
+      thumbnailUrl: backendCourse.thumbnailUrl,
+      trailerVideoUrl: backendCourse.trailerVideoUrl || backendCourse.trailer_video_url || backendCourse.trailer || backendCourse.videoUrl,
+      price: Number(backendCourse.price || 0),
+      isActive: backendCourse.isActive,
+      isFeatured: backendCourse.isFeatured,
+      enrollmentCount: Number(backendCourse.enrollmentCount || 0),
+      rating: Number(backendCourse.rating?.average || backendCourse.rating || 0),
+      reviewCount: Number(backendCourse.rating?.count || backendCourse.reviewCount || 0),
+      createdAt: backendCourse.createdAt,
+      updatedAt: backendCourse.updatedAt,
+      tags: Array.isArray(backendCourse.tags) ? backendCourse.tags : [],
+      status: backendCourse.status,
+      lessonsCount: backendCourse.lessonsCount
     };
   };
-  
+
   // Safely extract and map courses array
-  const rawCourses = Array.isArray(coursesData) 
-    ? coursesData 
-    : Array.isArray((coursesData as any)?.courses) 
-    ? (coursesData as any).courses 
-    : Array.isArray((coursesData as any)?.data) 
-    ? (coursesData as any).data 
-    : [];
-    
+  const rawCourses = Array.isArray(coursesData)
+    ? coursesData
+    : Array.isArray((coursesData as any)?.courses)
+      ? (coursesData as any).courses
+      : Array.isArray((coursesData as any)?.data)
+        ? (coursesData as any).data
+        : [];
+
   const courses: SimpleCourse[] = rawCourses.map(mapCourseData);
-    
+
   const stats: EducationStats | undefined = statsData;
-  const featuredCourses: SimpleCourse[] = Array.isArray(featuredData) 
-    ? featuredData 
-    : Array.isArray((featuredData as any)?.data) 
-    ? (featuredData as any).data 
+  const featuredCourses: SimpleCourse[] = Array.isArray(featuredData)
+    ? featuredData
+    : Array.isArray((featuredData as any)?.data)
+      ? (featuredData as any).data
+      : [];
+
+  const categories: Category[] = Array.isArray((categoriesData as any)?.categories)
+    ? (categoriesData as any).categories
     : [];
-    
-  const categories: Category[] = Array.isArray((categoriesData as any)?.categories) 
-    ? (categoriesData as any).categories 
-    : [];
-    
+
   // Filtrar y ordenar cursos - Validación adicional
   const filteredCourses = Array.isArray(courses) && courses.length > 0 ? courses.filter((course: SimpleCourse) => {
     // Validar que course es un objeto válido
@@ -169,25 +171,25 @@ const EducationManagement: React.FC = () => {
       console.warn('⚠️ Invalid course object:', course);
       return false;
     }
-    
+
     const title = course.title || '';
     const description = course.description || '';
     const category = course.category || '';
     const level = course.level || 'beginner';
     const price = course.price || 0;
     const isActive = course.isActive !== undefined ? course.isActive : true;
-    
-    const matchesSearch = searchTerm === '' || 
-                         title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
+    const matchesSearch = searchTerm === '' ||
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      description.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' ? isActive : !isActive);
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' ? isActive : !isActive);
     const matchesDifficulty = difficultyFilter === 'all' || level === difficultyFilter;
-    const matchesPrice = priceFilter === 'all' || 
-                        (priceFilter === 'free' ? price === 0 : price > 0);
-    
+    const matchesPrice = priceFilter === 'all' ||
+      (priceFilter === 'free' ? price === 0 : price > 0);
+
     return matchesSearch && matchesCategory && matchesStatus && matchesDifficulty && matchesPrice;
   }) : [];
 
@@ -323,7 +325,7 @@ const EducationManagement: React.FC = () => {
             Administra cursos y contenido educativo
           </p>
         </div>
-        
+
         <div className="mt-4 sm:mt-0 flex space-x-3">
           <button
             onClick={handleRefresh}
@@ -334,7 +336,7 @@ const EducationManagement: React.FC = () => {
             <RefreshCw className={`h-5 w-5 ${coursesLoading ? 'animate-spin' : ''}`} />
             <span>Actualizar</span>
           </button>
-          
+
           <button
             onClick={handleCreateCourse}
             className="btn-primary flex items-center space-x-2"
@@ -360,7 +362,7 @@ const EducationManagement: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
@@ -374,7 +376,7 @@ const EducationManagement: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
@@ -388,7 +390,7 @@ const EducationManagement: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
@@ -418,7 +420,7 @@ const EducationManagement: React.FC = () => {
               className="input-field pl-10 w-full"
             />
           </div>
-          
+
           <select
             value={categoryFilter}
             onChange={handleCategoryChange}
@@ -431,7 +433,7 @@ const EducationManagement: React.FC = () => {
               </option>
             ))}
           </select>
-          
+
           <select
             value={difficultyFilter}
             onChange={handleDifficultyChange}
@@ -442,7 +444,7 @@ const EducationManagement: React.FC = () => {
             <option value="intermediate">Intermedio</option>
             <option value="advanced">Avanzado</option>
           </select>
-          
+
           <select
             value={sortBy}
             onChange={handleSortChange}
@@ -506,7 +508,7 @@ const EducationManagement: React.FC = () => {
                       <BookOpen className="h-16 w-16 text-blue-400" />
                     </div>
                   )}
-                  
+
                   {/* Badges */}
                   <div className="absolute top-3 left-3">
                     {course.isFeatured && (
@@ -515,16 +517,28 @@ const EducationManagement: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="absolute top-3 right-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      course.isActive 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${course.isActive
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}>
                       {course.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </div>
+
+                  {course.trailerVideoUrl && (
+                    <a
+                      href={course.trailerVideoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Ver trailer del curso"
+                    >
+                      <PlayCircle className="h-14 w-14 text-white drop-shadow-lg transform scale-95 group-hover:scale-110 transition-transform duration-300" />
+                    </a>
+                  )}
                 </div>
 
                 {/* Contenido */}
@@ -582,20 +596,19 @@ const EducationManagement: React.FC = () => {
                       <Edit className="h-4 w-4" />
                       <span>Editar</span>
                     </button>
-                    
+
                     <button
                       onClick={() => handleToggleCourseStatus(course)}
-                      className={`px-3 py-2 rounded-lg transition-colors ${
-                        course.isActive
-                          ? 'text-yellow-600 hover:bg-yellow-50'
-                          : 'text-green-600 hover:bg-green-50'
-                      }`}
+                      className={`px-3 py-2 rounded-lg transition-colors ${course.isActive
+                        ? 'text-yellow-600 hover:bg-yellow-50'
+                        : 'text-green-600 hover:bg-green-50'
+                        }`}
                       title={course.isActive ? 'Desactivar' : 'Activar'}
                       type="button"
                     >
                       {course.isActive ? '⏸️' : '▶️'}
                     </button>
-                    
+
                     <button
                       onClick={() => handleDeleteCourse(course)}
                       className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -608,7 +621,7 @@ const EducationManagement: React.FC = () => {
                 </div>
               </div>
             ))}
-            
+
             {/* Card para crear nuevo curso */}
             {searchTerm === '' && categoryFilter === 'all' && (
               <div
